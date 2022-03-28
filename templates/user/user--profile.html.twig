@@ -1,0 +1,100 @@
+{#
+/**
+ * @file
+ * Theme override to present all user data.
+ *
+ * This template is used when viewing a registered user's page,
+ * e.g., example.com/user/123. 123 being the user's ID.
+ *
+ * Available variables:
+ * - content: A list of content items. Use 'content' to print all content, or
+ *   print a subset such as 'content.field_example'. Fields attached to a user
+ *   such as 'user_picture' are available as 'content.user_picture'.
+ * - attributes: HTML attributes for the container element.
+ * - user: A Drupal User entity.
+ *
+ * @see template_preprocess_user()
+ */
+#}
+<article{{ attributes.addClass('profile') }}>
+  {# {{ kint(user.roles) }} #}
+  <h3 class="text-dark mb-4">Profile</h3>
+
+  <div class="row mb-3">
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body text-center shadow">
+              {% if content.user_picture | render %}
+                {{ content.user_picture }}
+              {% endif %}
+            </div>
+        </div>
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="text-primary font-weight-bold m-0">Your dashboard</h6>
+            </div>
+            <div class="card-body">
+                <a class="btn btn-primary btn-block" href="/dashboard"> Dashboard </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="row">
+            <div class="col">
+                <div class="card shadow mb-3">
+                    <div class="card-header py-3">
+                        <p class="text-primary m-0 font-weight-bold">User Settings</p>
+                    </div>
+                    <div class="card-body">
+                            <div class="row">
+                                <div class="col">
+                                  <strong>Username:</strong> {{ user.displayname }}
+                                </div>
+                                <div class="col">
+                                  <strong>Email Address:</strong> {{ user.mail.value }}
+                                </div>
+                            </div>
+                            <div class="row mb-5">
+                                <div class="col">
+                                    {{ content.field_first_name }}
+                                </div>
+                                <div class="col">
+                                    {{ content.field_last_name }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    {# {{ kint(user.roles) }} #}
+                                    {# {% set roles = user.getroles(TRUE) %} #}
+                                    {% if 'water_user' in user.getroles(TRUE)  %}
+                                      <p>The user has the role <b>Water User</b> for insert <b>Water demands</b>.</p>
+                                    {% endif %}
+                                    {% if 'water_stream_provider' in user.getroles(TRUE)  %}
+                                      <p>The user has the role <b>Water Stream Provider</b> for insert <b>Water Streams</b>.</p>
+                                    {% endif %}
+                                    {% if 'technolgy_provider' in user.getroles(TRUE)  %}
+                                      <p>The user has the role <b>Technology provider</b> for insert <b>Technology</b>.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                    </div>
+                </div>
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <p class="text-primary m-0 font-weight-bold">Contact Settings</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="col">
+                                {{ content.field_address }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</article>

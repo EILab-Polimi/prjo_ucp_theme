@@ -1,0 +1,31 @@
+{#
+/**
+ * @file
+ * Theme override for page titles.
+ *
+ * Available variables:
+ * - title_attributes: HTML attributes for the page title element.
+ * - title_prefix: Additional output populated by modules, intended to be
+ *   displayed in front of the main title tag that appears in the template.
+ * - title: The page title, for use in the actual content.
+ * - title_suffix: Additional output populated by modules, intended to be
+ *   displayed after the main title tag that appears in the template.
+ */
+#}
+{{ title_prefix }}
+{% if title %}
+  <div class="row">
+    <div class="col-6">
+      <h3{{ title_attributes.addClass(['mb-4', 'text-dark', 'page-title']) }}> {{ title_icon }} {{ title }}</h3>
+    </div>
+    <div class="col-6">
+      {% if user_picture is defined %}
+        <h6 class="mt-2">{{ user_picture }}</h6>
+      {% endif %}
+      {% if views_add_content is defined %}
+        {{ views_add_content }}
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+{{ title_suffix }}

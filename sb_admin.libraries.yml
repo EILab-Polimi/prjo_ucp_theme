@@ -1,0 +1,22 @@
+global-styling:
+  css:
+    theme:
+      css/style.css: {}
+
+global-scripts:
+  version: 1.x
+  js:
+    js/sidebar.js: {}
+
+bootstrap4-dropdown:
+  header: true
+  dependencies:
+    - core/popperjs
+
+front-script:
+  version: 1.x
+  css:
+    theme:
+      css/front.css: {}
+  js:
+    js/front.js: {}

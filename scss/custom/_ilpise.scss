@@ -1,0 +1,120 @@
+
+/* The region nav additional is the top bar menu with notification and user menu */
+/* we make it float right with margin-left auto and the blocks inside it to display inline*/
+/* TODO -crea region--nav-additional.html.twig  se auth aggiungi margin-left:auto  */
+.region-nav-additional {
+  margin-left: auto !important;
+  .block {
+    display: inline-block;
+    margin-right: 30px;
+    margin-top: 0px;
+  }
+}
+
+.region-nav-branding {
+  display: flex;
+  padding-top: 1rem;
+  // height: $topbar-base-height;
+  height: 8.375rem;
+  justify-content: center;
+  .block {
+    // height: 4.375rem;
+    .navbar-brand img {
+        height: 99px;
+        margin: 0 0 0 0;
+        width: auto;
+    }
+    .navbar-brand a.site-title {
+        color: white;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 800;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: .05rem;
+        z-index: 1;
+    }
+
+  }
+}
+
+.region-nav-sidebar {
+  display: flex;
+  padding-top: 1rem;
+  justify-content: center;
+}
+
+// @media (min-width: 768px)
+// .sidebar.toggled .sidebar-brand .sidebar-brand-text {
+//     display: none;
+// }
+
+.node-form {
+  @include media-breakpoint-up(lg) {
+    margin: 0;
+  }
+}
+
+// Form elements
+label {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+// Remove margin for form input with label
+.form-item, .form-actions {
+    margin-top: 0em;
+    margin-bottom: 0em;
+}
+
+// Set margin for form input without label
+.form-no-label {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+// Form buttons
+.node-form .form-actions {
+    text-align: left;
+}
+
+.btn-menu.active {
+  background: #0B4A68;
+  border-radius: 100px;
+}
+
+.btn-menu {
+  background: #57BCE7;
+  border-radius: 100px;
+}
+
+// Style for btns disabled in water loop
+
+.btn-wl-disabled {
+  background: #EBEBEB;
+  border-radius: 5px;
+}
+
+
+// DASHBOARD
+
+.border-left-primary{
+  border-left: .25rem solid #2F9DD0 !important;
+}
+
+.border-left-success{
+  border-left: .25rem solid #1cc88a !important;
+}
+
+.border-left-info{
+  border-left: .25rem solid #36b9cc !important;
+}
+
+// Background sidebar
+.bg-gradient-sidebar {
+  background-color: #2F9DD0;
+  background-image: linear-gradient(180deg, #2F9DD0 10%, #1D4D64 100%);
+  background-size: cover;
+}

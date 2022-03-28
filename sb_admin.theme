@@ -1,0 +1,582 @@
+<?php
+
+/**
+ * @file
+ * SUBTHEME theme file.
+ */
+
+use \Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Url;
+use Drupal\Core\Menu\MenuTreeParameters;
+use Drupal\node\Entity\Node;
+
+
+$sb_admin_icon = [];
+
+/**
+* Implements hook_preprocess_user().
+*/
+// TODO usare per alterare la view dello user
+// function sb_admin_preprocess_user(&$variables) {
+//   /** @var User $account */
+//   $account = $variables['elements']['#user'];
+//
+//   $variables['username'] = $account->getDisplayName();
+// }
+
+/**
+* Implements hook_preprocess_views_view_field().
+* NON CI SERVE
+*/
+function sb_admin_preprocess_views_view_field(&$variables){
+  // Set user icon in water listings
+  //   global $base_url;
+  //   $theme = \Drupal::theme()->getActiveTheme();
+  //   $default_image_url = $base_url.'/'. $theme->getPath() .'/css/assets/avatar_2x.png';
+  //
+  //   $uid = \Drupal::currentUser()->id();
+  //
+  //   if($uid > 0)
+  //   {
+  //      // Load user
+  //      $user = Drupal\user\Entity\User::load($uid);
+  //      $userName = $user->getUsername();
+  //
+  //      // If user have a picture, add it to variable
+  //      if(!$user->user_picture->isEmpty()){
+  //          $pictureUri = $user->user_picture->entity->getFileUri();
+  //
+  //          // Add style to picture
+  //          // $userPicture = [
+  //          //     '#theme' => 'image_style',
+  //          //     '#style_name' => 'profile_picture',
+  //          //     '#uri' => $pictureUri,
+  //          // ];
+  //          $style = \Drupal::entityTypeManager()->getStorage('image_style')->load('thumbnail');
+  //          $urlPicture = $style->buildUrl($pictureUri);
+  //          $userPicture = $urlPicture;
+  //      } else {
+  //        $userPicture = $default_image_url;
+  //      }
+  //
+  //      // Set variables
+  //      $variables['sb_admin'] = [
+  //          'profile_name' => $userName,
+  //          'profile_picture' => $userPicture,
+  //          'profile_id' => $uid
+  //      ];
+  //
+  //      // Avoid Caching
+  //      $variables['#cache']['max-age'] = 0;
+  // }
+}
+
+/**
+* Implements hook_preprocess_menu
+*/
+function sb_admin_preprocess_menu(&$variables) {
+  // dpm($variables);
+
+  $uid = \Drupal::currentUser()->id();
+
+  // If user in NOT Anonymous
+  if( $uid > 0) {
+    // Load user
+    $user = Drupal\user\Entity\User::load($uid);
+    $userName = $user->getUsername();
+
+    // If user have a picture, add it to $variableS
+    if(!$user->user_picture->isEmpty()){
+      // dpm($user->user_picture->entity->getFileUri());
+      $pictureUri = $user->user_picture->entity->getFileUri();
+
+      // Eventyally Add style to picture
+      // $userPicture = [
+      //     '#theme' => 'image_style',
+      //     '#style_name' => 'profile_picture',
+      //     '#uri' => $pictureUri,
+      // ];
+      $style = \Drupal::entityTypeManager()->getStorage('image_style')->load('thumbnail');
+      $urlPicture = $style->buildUrl($pictureUri);
+      $userPicture = $urlPicture;
+    } else {
+      // Load default image associated with this field
+      $default_image = $user->user_picture->getSetting('default_image');
+      if ($default_image && $default_image['uuid']) {
+
+        $entityrepository = Drupal::service('entity.repository');
+        $defaultImageFile = $entityrepository->loadEntityByUuid('file', $default_image['uuid']);
+
+        if($defaultImageFile) {
+          $pictureUri = $defaultImageFile->getFileUri();
+          $style = \Drupal::entityTypeManager()->getStorage('image_style')->load('thumbnail');
+          $urlPicture = $style->buildUrl($pictureUri);
+          $userPicture = $urlPicture;
+        }
+      }
+     }
+
+     // Set variables
+     $variables['sb_admin'] = [
+         'profile_name' => $userName,
+         'profile_picture' => $userPicture,
+         'profile_id' => $uid
+     ];
+
+     // Avoid Caching
+     $variables['#cache']['max-age'] = 0;
+
+  }
+}
+
+// function sb_admin_preprocess_menu__account(&$variables) {
+//    // kint($variables['items']['user.page']['title']);
+//    $variables['#cache']['max-age'] = 0;
+//    if (isset($variables['items']['user.page'])){
+//      // kint($variables['items']['user.page']['url']);
+//      $account = \Drupal::currentUser();
+//      $url = \Drupal\Core\Url::fromUri('internal:/user/'.$account->id().'/customer');
+//      $variables['items']['user.page']['url'] = $url;
+//      $variables['items']['user.page']['title'] = $account->getAccountName();
+//    }
+//    // var_dump($variables);
+//    // if($variables['items']['user.page'] == )
+//    // $variables['account_name'] = Drupal::currentUser()->getAccountName();
+//  }
+
+/**
+* Implements hook_preprocess_page
+*/
+
+// https://drupal.stackexchange.com/questions/183280/how-can-i-get-the-register-form-on-the-front-page
+
+function sb_admin_preprocess_page(&$variables) {
+  // dpm($variables);
+  // Load the service renderer
+  $render = Drupal::service('renderer');
+
+  // User login form
+  $login_form = Drupal::formBuilder()->getForm('Drupal\user\Form\UserLoginForm');
+  $variables['login_form'] = $render->renderPlain($login_form);
+
+  // User registration form
+  $register_form = \Drupal::service('entity.form_builder')->getForm(\Drupal\user\Entity\User::create([]), 'register', []);
+  // $variables['register_form'] = $render->renderPlain($register_form);
+  $variables['register_form'] = $render->render($register_form);
+
+  // Reset password form
+  $reset_password_form = Drupal::formBuilder()->getForm('Drupal\user\Form\UserPasswordForm');
+  $variables['reset_password_form'] = $render->renderPlain($reset_password_form);
+
+  // Add javascript specifically for frontpage
+  // This has been moved inside page--front.html.twig
+  if ($variables['is_front'] == TRUE) {
+    // https://drupal.stackexchange.com/questions/146617/how-to-programmatically-render-a-contact-form-in-a-theme-in-d8
+    // https://drupal.stackexchange.com/questions/147000/programmatically-get-a-form-in-drupal-8
+
+    // deafult_form is referred to feedback form
+    $default_form = \Drupal::config('contact.settings')->get('default_form');
+    $entity = \Drupal::entityTypeManager()->getStorage('contact_form')->load($default_form);
+    // dpm($entity);
+
+    $message = \Drupal::entityTypeManager()
+      ->getStorage('contact_message')
+      ->create(array(
+        'contact_form' => $entity->id(),
+        // 'contact_form' => 'contact_message_feedback_form', // This create a new form
+      ));
+    $form = Drupal::service('entity.form_builder')->getForm($message);
+    // dpm($form);
+    unset($form['actions']['preview']);
+    $form['actions']['submit']['#value'] = t('Submit');
+    $form['name']['#title'] = t('Name');
+    $form['name']['#placeholder'] = t('Name surname');
+    $form['mail']['#title'] = t('Email');
+    $form['mail']['#placeholder'] = t('Email Address');
+
+    // Placeholders for this fields can be settled in interface
+    // $form['affiliation']['#placeholder'] = t('ex. University');
+    // $form['message']['#placeholder'] = t('ex. University');
+
+    $variables['contact_form'] = $form;
+  }
+ //  if (!empty($variables['main_menu'])) {
+ //   $variables['main_menu']['#attributes']['id'] = 'main-menu-links';
+ //   $variables['main_menu']['#attributes']['class'] = array('links', 'clearfix', 'MYNEW_class');
+ // }
+}
+
+/**
+* Implements hook_form_FORM_ID_alter
+*/
+
+function sb_admin_form_user_login_form_alter(&$form, $form_state) {
+  $form['name']['#title_display'] = 'invisible';
+  $form['name']['#placeholder'] = t('Username');
+  $form['pass']['#title_display'] = 'invisible';
+  $form['pass']['#placeholder'] = t('Password');
+
+  $form['actions']['submit']['#attributes'] = array('class' => array('btn-block'));
+
+}
+
+function sb_admin_form_user_pass_alter(&$form, $form_state) {
+
+  $form['actions']['submit']['#attributes'] = array('class' => array('btn-block'));
+
+}
+
+function sb_admin_form_user_register_form_alter(&$form, $form_state) {
+  $form['account']['mail']['#title_display'] = 'invisible';
+  $form['account']['mail']['#placeholder'] = t('Email');
+  $form['account']['name']['#title_display'] = 'invisible';
+  $form['account']['name']['#placeholder'] = t('Username');
+
+  $form['actions']['submit']['#attributes'] = array('class' => array('btn-block'));
+}
+
+// user edit tab - user/%/edit
+// function sb_admin_form_user_form_alter(&$form, $form_state) {
+//
+//   // drupal_set_message('sb_admin_form_user_form_alter <pre>'.print_r($form['#theme'], TRUE).'</pre>', 'status');
+//   // kint($form['#form_id']);
+//   if($form['#form_id'] == 'user_register_form'){
+//     $form['actions']['submit']['#attributes'] = array('class' => array('btn-block'));
+//   }
+// }
+
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter().
+ */
+
+// https://stackoverflow.com/questions/34835931/how-to-add-custom-html-on-user-profile-page-in-drupal-8
+function sb_admin_theme_suggestions_user_alter(array &$suggestions, array $variables) {
+  $request = \Drupal::routeMatch()->getRouteObject();
+  $path_args = explode('/', $request->getPath());
+  if (\Drupal::currentUser()->isAuthenticated() && in_array('user', $path_args)) {
+    $suggestions[] = 'user__profile';
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+// function sb_admin_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+//
+//   kint($form_id);
+//   // Adding custom validation for the welcome page type field.
+//   // if ($form_id == 'user_register_form') {
+//   //    print_r('Reaching in here');exit;
+//   // }
+// }
+
+/**
+ * Implements hook_theme().
+ */
+// function sb_admin_theme($existing, $type, $theme, $path) {
+//   return [
+//     // form id (weather it's an edit node for or a new node form)
+//     'node_water_request_edit_form' => [
+//       'render element' => 'form',
+//     ],
+//   ];
+// }
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() for \Drupal\node\NodeForm.
+ */
+
+/* Taken from seven theme implementation */
+/* We add the node_edit_form theme to all node form */
+function sb_admin_form_node_form_alter(&$form, FormStateInterface $form_state) {
+  $form['#theme'] = ['node_edit_form'];
+}
+
+/**
+ * Implements hook_theme_suggestions_alter().
+ */
+
+/* Used in combination with the prevoius we suggest a per content type form template */
+function sb_admin_theme_suggestions_alter(array &$suggestions, array $variables, $hook) {
+  if ($hook == 'node_edit_form') {
+    // kint('hooked');
+
+
+    // kint(\Drupal::routeMatch()->getRouteName());
+    // node.add - for content add
+    //entity.group_content.create_form - for add content from group
+
+    // kint(\Drupal::routeMatch()->getParameters());
+    // kint(\Drupal::routeMatch()->getParameter('plugin_id'));
+
+    if ($group_content_type = \Drupal::routeMatch()->getParameter('plugin_id')) {
+      // kint($group_content_type);
+      $appo = explode(':', $group_content_type);
+      // kint($appo);
+      $content_type = $appo[1];
+      // kint($content_type);
+    } elseif ($node = \Drupal::routeMatch()->getParameter('node')) {
+      // node edit - get content type from node
+      // kint($node);
+      $content_type = $node->bundle();
+    } else {
+      // kint('no route match');
+      // node add - get content type from url
+      $current_path = \Drupal::service('path.current')->getPath();
+      $path_args = explode('/', $current_path);
+      $content_type = $path_args[3];
+    }
+    $suggestions[] = 'node_edit_form__' . $content_type;
+  }
+}
+
+/**
+ * Implements hook_preprocess_page_title().
+ */
+// function sb_admin_preprocess_page_title(&$variables) {
+//
+//   // dpm($variables);
+//   $menu_tree = \Drupal::menuTree();
+//   $menu_name = 'sidebar-menu';
+//
+//   // Build the typical default set of menu tree parameters.
+//   $parameters = $menu_tree->getCurrentRouteMenuTreeParameters($menu_name);
+//
+//   // Load the tree based on this set of parameters.
+//   $tree = $menu_tree->load($menu_name, $parameters);
+//
+//   // $manipulators = array(
+//   //     array('callable' => 'menu.default_tree_manipulators:checkAccess'),
+//   //     array('callable' => 'menu.default_tree_manipulators:generateIndexAndSort'),
+//   // );
+//   // $tree = $menu_tree->transform($tree, $manipulators);
+//
+//
+//   // kint(\Drupal::routeMatch()->getRouteName());
+//   // kint(\Drupal::routeMatch()->getParameters());
+//   // kint(\Drupal::routeMatch()->getParameters()->keys());
+//
+//   // Manage add content for groups
+//   if(\Drupal::routeMatch()->getParameters()->has('plugin_id')){
+//     $plugin_id = \Drupal::routeMatch()->getParameters()->get('plugin_id');
+//     $group = \Drupal::routeMatch()->getParameters()->get('group');
+//
+//     $plugin = $group->getGroupType()->getContentPlugin($plugin_id);
+//     $storage_handler = \Drupal::entityTypeManager()->getStorage('node_type');
+//     $bundle_label = $storage_handler->load($plugin->getEntityBundle())->label();
+//     // kint($bundle_label);
+//     $variables['title'] = 'Create '.$bundle_label;
+//
+//     $appo = explode(':',$plugin_id);
+//     if($appo[1] == 'water_request'){
+//       $GLOBALS['sb_admin_icon']['fa_icon'] = 'fa-hand-holding-water';
+//     }  elseif ($appo[1] == 'water_offer'){
+//       $GLOBALS['sb_admin_icon']['fa_icon'] = 'fa-tint';
+//     } else{
+//       $GLOBALS['sb_admin_icon']['fa_icon'] = 'fa-cogs';
+//     }
+//       $GLOBALS['sb_admin_icon']['fa_icon_prefix'] = 'fas';
+//
+//   }
+//   // kint(\Drupal::routeMatch()->getRouteObject()->getOptions());
+//   // kint(\Drupal::routeMatch()->getRouteObject());
+//
+//   // kint(\Drupal::routeMatch()->getRouteName());
+//   // kint(\Drupal::service('path.current')->getPath());
+//
+//   // RouteMatchInterface::getParameter
+//   // RouteMatchInterface::getParameters
+//   // RouteMatchInterface::getRawParameter
+//   // RouteMatchInterface::getRawParameters
+//   // RouteMatchInterface::getRouteName
+//   // RouteMatchInterface::getRouteObject
+//
+//   if(\Drupal::routeMatch()->getRouteName() == 'view.water_offers_listing.page_1'){
+//     $variables['views_add_content']['#markup'] = Markup::create('<a class="btn btn-lg btn-primary float-right" href="/node/add/water_offer"><i class="fa fa-plus" aria-hidden="true"></i> Add new water stream</a>');
+//   }
+//   if(\Drupal::routeMatch()->getRouteName() == 'view.water_requests_listing.page_1'){
+//     $variables['views_add_content']['#markup'] = Markup::create('<a class="btn btn-lg btn-primary float-right" href="/node/add/water_request"><i class="fa fa-plus" aria-hidden="true"></i> Add new water demand</a>');
+//   }
+//   if(\Drupal::routeMatch()->getRouteName() == 'view.technologies_listing.page_1'){
+//     $variables['views_add_content']['#markup'] = Markup::create('<a class="btn btn-lg btn-primary float-right" href="/node/add/technology_product"><i class="fa fa-plus" aria-hidden="true"></i> Add new technology product</a>');
+//   }
+//   if(\Drupal::routeMatch()->getRouteName() == 'view.water_loops_listing.page_1'){
+//     $variables['views_add_content']['#markup'] = Markup::create('<a class="btn btn-lg btn-primary float-right" href="/node/add/water_loop"><i class="fa fa-plus" aria-hidden="true"></i> Add new water loop</a>');
+//   }
+//
+//   // Node edit - Node View
+//   if ($node = \Drupal::routeMatch()->getParameter('node')) {
+//     // dpm('node edit');
+//     $content_type = $node->bundle();
+//     // dpm($content_type);
+//     $icon = getIcon($tree, $content_type);
+//
+//     // Add user logo for technology_product content ytpe
+//     // TODO add this logic in module
+//     if($content_type == "technology_product") {
+//       $current_path = \Drupal::service('path.current')->getPath();
+//       $path_args = explode('/', $current_path);
+//       $nid = $path_args[2];
+//       $node = Node::load($nid);
+//       // dpm($node->getOwner());
+//
+//       $author = $node->getOwner();
+//       // dpm($author->getDisplayName());
+//       if (!$author->user_picture->isEmpty()) {
+//         $pictureUri = $author->user_picture->entity->getFileUri();
+//         $style = \Drupal::entityTypeManager()->getStorage('image_style')->load('thumbnail');
+//         $urlPicture = $style->buildUrl($pictureUri);
+//         $userPicture = $urlPicture;
+//       } else {
+//         // Load default image associated with this field
+//         $default_image = $author->user_picture->getSetting('default_image');
+//         if ($default_image && $default_image['uuid']) {
+//
+//           $entityrepository = Drupal::service('entity.repository');
+//           $defaultImageFile = $entityrepository->loadEntityByUuid('file', $default_image['uuid']);
+//
+//           if($defaultImageFile) {
+//             $pictureUri = $defaultImageFile->getFileUri();
+//             $style = \Drupal::entityTypeManager()->getStorage('image_style')->load('thumbnail');
+//             $urlPicture = $style->buildUrl($pictureUri);
+//             $userPicture = $urlPicture;
+//           }
+//         }
+//       }
+//       $variables['user_picture']['#markup'] = Markup::create('Produced by: <img class="border rounded-circle img-profile" src="'.$userPicture.'"><span class="ml-2"><a title="View user profile." href="/user/'.$author->id().'" lang="" about="/user/'.$author->id().'" typeof="Person" property="schema:name" datatype="" class="username">'.$author->getDisplayName().'</a></span>');
+//       // $variables['user_picture'] = $userPicture;
+//
+//     }
+//
+//   } else {
+//     // general path
+//     // kint('general path');
+//     // dpm('NOT edit');
+//     $current_path = \Drupal::service('path.current')->getPath();
+//
+//     $path_args = explode('/', $current_path);
+//     // kint($path_args);
+//     if($path_args[1] == 'node') {
+//       // node add - we get the content type from $current_path
+//       $content_type = $path_args[3];
+//       $icon = getIcon($tree, $content_type);
+//     } else {
+//       $route_name = \Drupal::routeMatch()->getRouteName();
+//       getIconTwo($tree, $current_path, $route_name);
+//     }
+//   }
+//
+//   // uncommento to load the menu
+//   // $menu = loadMenu($tree);
+//   // kint($menu);
+//
+//   // kint($GLOBALS['sb_admin_icon']);
+//
+//   $variables['title_icon']['#markup'] = Markup::create('<i class="'.$GLOBALS['sb_admin_icon']['fa_icon_prefix'].' '.$GLOBALS['sb_admin_icon']['fa_icon'].'"></i>');
+//
+// }
+
+// function getIconTwo($tree, $current_path, $route_name) {
+//   // kint('getIconTwo');
+//   // kint($current_path);
+//   // kint($route_name);
+//   // $options = [];
+//   foreach ($tree as $item) {
+//     if($item->link->isEnabled()) {
+//       if($item->link->getUrlObject()->getRouteName() == $route_name && $item->link->getUrlObject()->getInternalPath() == str_replace('/','',$current_path)){
+//         $GLOBALS['sb_admin_icon'] = $item->link->getUrlObject()->getOptions();
+//         break;
+//       } else {
+//         getIconTwo($item->subtree, $current_path, $route_name);
+//       }
+//     }
+//   }
+//
+// }
+//
+// function getIcon($tree, $content_type) {
+//   // kint('getIcon');
+//
+//   foreach ($tree as $item) {
+//     if($item->link->isEnabled()) {
+//       if($item->link->getUrlObject()->getRouteName() == 'node.add' && $item->link->getUrlObject()->getRouteParameters()['node_type'] == $content_type){
+//         $GLOBALS['sb_admin_icon'] = $item->link->getUrlObject()->getOptions();
+//         break;
+//       } else {
+//         getIcon($item->subtree, $content_type);
+//       }
+//     }
+//   }
+//
+// }
+
+// function loadMenu($tree) {
+//   $menu = [];
+//   foreach ($tree as $item) {
+//     if($item->link->isEnabled()) {
+//       $menu[] = [
+//         // 'weight' => $item->link->getWeight(),
+//         // 'title' => $item->link->getTitle(),
+//         'url' => $item->link->getUrlObject(),
+//         'route_name' => $item->link->getUrlObject()->getRouteName(),
+//         'path' => $item->link->getUrlObject()->getInternalPath(),
+//         // 'uri' => $item->link->getUrlObject()->getUri(),
+//         // 'parameters' => $item->link->getUrlObject()->getRouteParameters(),
+//         // 'options' => $item->link->getUrlObject()->getOptions(),
+//         // 'has_children' => $item->hasChildren,
+//         'children' => loadMenu($item->subtree),
+//       ];
+//     }
+//   }
+//   return $menu;
+// }
+
+
+/**
+ * Implements hook_preprocess_node().
+ Parameters
+ array $variables: An associative array containing:
+
+ elements: An array of elements to display in view mode.
+ node: The node object.
+ view_mode: View mode; e.g., 'full', 'teaser', etc.
+ */
+
+// function sb_admin_preprocess_node(&$variables) {
+//   // kint($variables);
+//   // Customize variables per content type in view mode
+//   if ($variables['node']->getType() === 'water_request') {
+//     // TODO Set icon title per content type
+//
+//     // kint('ppn');
+//     // $variables['my_title'] = $variables['node']->field_my_title->value;
+//   }
+// }
+
+/**
+ * Implements hook_theme_suggestions_alter() for contact form container.
+ */
+// function sb_admin_theme_suggestions_container_alter(array &$suggestions, array &$variables) {
+//
+//   kint($variables);
+//
+//   $name = '';
+//   $type = '';
+//   $id = '';
+//   if (isset($variables['element']['#name'])) {
+//     $name = $variables['element']['#name'];
+//   }
+//
+//   if (isset($variables['element']['#type'])) {
+//     $type = $variables['element']['#type'];
+//   }
+//
+//   if ($type == 'actions') {
+//     $id = $variables['element']['#id'];
+//     array_unshift($suggestions, 'container__' . $type . '__' . $id);
+//   } else {
+//     array_unshift($suggestions, 'container__' . $type . '__' . $name);
+//   }
+// }
