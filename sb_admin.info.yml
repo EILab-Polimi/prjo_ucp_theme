@@ -1,0 +1,33 @@
+name: 'ProjectO UCP theme'
+type: theme
+description: 'SB admin 2 subtheme based on Bootstrap 4 theme.'
+core: 8.x
+core_version_requirement: '^8 || ^9'
+
+libraries:
+  - sb_admin/global-scripts
+  - sb_admin/bootstrap4-dropdown
+  - sb_admin/global-styling
+  # - sb_admin/bootsrap4-js-latest
+
+
+# libraries-extend:
+#   bootstrap4/bootstrap4-js-latest:
+#     - core/popperjs
+
+base theme: bootstrap4
+
+# stylesheets-remove:
+#   - '@bootstrap4/css/style.css'
+
+regions:
+  header: Header
+  nav_branding: 'Navigation branding region'
+  nav_main: 'Main navigation region'
+  nav_sidebar: 'Sidebar navigation region'
+  nav_additional: 'Additional navigation region (eg search form, social icons, etc)'
+  breadcrumb: Breadcrumbs
+  content: 'Main content'
+  sidebar_first: 'Sidebar first'
+  sidebar_second: 'Sidebar second'
+  footer: Footer

@@ -1,0 +1,20 @@
+/* Front page */
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: 'Righteous';
+    color: #1D4D64;
+}
+
+
+/* Contact form */
+form.contact-message-feedback-form input {
+  border: 2px solid #1d4d64 !important;
+}
+
+form.contact-message-feedback-form textarea {
+  border: 2px solid #1d4d64 !important;
+}
+
+form.contact-message-feedback-form div{
+  margin-bottom: 1rem !important;
+}
